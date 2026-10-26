@@ -11,11 +11,11 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A **GeoServer cookbook** for publishing, styling, federating, and securing OGC services with GeoServer and PostGIS. Patterns are drawn from the ZQM fleet’s running GeoServer installs (3.0.2 on Node-1, 2.28.6 on Node-3 and Node-4) and its verified federation paths. It is intended for GIS engineers and geospatial platform builders; validate each pattern against your own data, software versions, and operating environment before adopting it.
+A **GeoServer cookbook** for publishing, styling, federating, and securing OGC services with GeoServer and PostGIS. It is intended for GIS engineers and geospatial platform builders; validate each pattern against your own data, software versions, and operating environment before adopting it.
 
 ## Repository role and status
 
-**Status:** Active, public — first executable pattern implemented. The PostGIS publication example is tested for request-configuration contracts, but still requires validation against a real GeoServer/PostGIS deployment.
+**Status:** Active, public — first executable pattern implemented. The PostGIS publication example has contract tests and a disposable GeoServer 2.28.6/PostGIS 16 integration workflow that verifies a seeded feature through WFS. This is reproducible integration evidence, not production certification.
 
 **What this repository is:** GeoServer patterns — publishing PostGIS layers, SLD styling, workspace/datastore setup, OGC service configuration, and multi-node federation.
 
@@ -29,10 +29,10 @@ Geospatial developers and platform engineers who publish vector and raster data 
 
 ## Prerequisites
 
-- GeoServer 3.0.2 (or 2.28.x — note version-specific behavior where it differs)
-- PostGIS-backed Postgres (see [postgis-cookbook](https://github.com/ZQM-Computing/postgis-cookbook))
-- Java 21 runtime for GeoServer 3.x
-- Bash
+- GeoServer 2.28.6 for the current integration workflow; validate version-specific behavior before using another release
+- PostGIS-backed PostgreSQL (see [postgis-cookbook](https://github.com/ZQM-Computing/postgis-cookbook))
+- Python 3.11+ for the example and tests
+- Bash for local operations
 
 ## Patterns
 
@@ -52,26 +52,30 @@ Geospatial developers and platform engineers who publish vector and raster data 
 geoserver-cookbook/
 ├── examples/
 │   └── 01-publish-postgis/  # REST API publication pattern and runbook
-├── tests/                   # request/XML contract tests
-├── .github/workflows/       # test workflow
+├── tests/                   # contract tests and disposable integration test
+├── .github/workflows/       # contract and live integration workflows
 ├── README.md
 └── LICENSE
 ```
 
 ## Validation
 
-Run the local contract tests with `python -m unittest discover -s tests -v`. These tests cover XML escaping, PostGIS connection-parameter serialization, explicit native CRS configuration, and missing-setting rejection. They do not prove compatibility with a live GeoServer version, connectivity from GeoServer to PostGIS, or correct service authorization. The real deployment path must be tested in an isolated environment before production use.
+Run the local contract tests with `python -m unittest discover -s tests -v`. These cover XML escaping, PostGIS connection-parameter serialization, explicit native CRS configuration, and missing-setting rejection.
+
+The CI integration job provisions disposable PostGIS and GeoServer containers, creates a synthetic point feature, runs the publisher, then queries the published layer through WFS and asserts the feature properties. It uses a pinned GeoServer 2.28.6 image and a pinned psycopg test dependency. The job does not use production data or credentials.
+
+The integration test proves the exercised publication path only. It does not establish production TLS, least-privilege database access, service-level authorization, performance under load, backup readiness, or compatibility with every supported GeoServer release. Before production use, verify native CRS, extent, attributes, intended service endpoints, access rules, and data publication rights.
 
 ## Roadmap
 
-- Add a disposable GeoServer/PostGIS integration test pinned to supported versions
 - Add SLD styling (02) with schema validation and rendering evidence
 - Add federation patterns (03, 04) with explicit node/version assumptions
 - Add security checks (07) for least privilege and service-level access
+- Extend integration coverage to verify CRS/extent and denied access for an unauthorized service role
 
 ## Contributing
 
-A contributing guide lands with the first pattern pass. Report security issues to <zqmcomputing@gmail.com> — please do not open a public issue for those.
+Report security issues to <zqmcomputing@gmail.com> — please do not open a public issue for those.
 
 ## More from this series
 
