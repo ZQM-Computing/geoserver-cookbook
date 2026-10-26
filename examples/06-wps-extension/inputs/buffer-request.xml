@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 06-wps-extension input: WPS Execute request for JTS:buffer.
+     Synthetic point only; distance is 0.01 degrees (a geometry demo,
+     not a measurement — reproject first for real distances).
+     NOTE (design-only): process identifier spelling (JTS:buffer vs
+     geo:buffer) and GML version handling vary by GeoServer/WPS
+     version — confirm against GetCapabilities at validation and
+     record any difference. -->
+<wps:Execute version="1.0.0" service="WPS"
+    xmlns:wps="http://www.opengis.net/wps/1.0.0"
+    xmlns:ows="http://www.opengis.net/ows/1.1"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd">
+  <ows:Identifier>JTS:buffer</ows:Identifier>
+  <wps:DataInputs>
+    <wps:Input>
+      <ows:Identifier>geom</ows:Identifier>
+      <wps:Data>
+        <wps:ComplexData mimeType="application/wkt">POINT(-80.0 29.0)</wps:ComplexData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>distance</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>0.01</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+  </wps:DataInputs>
+  <wps:ResponseForm>
+    <wps:RawDataOutput mimeType="application/wkt">
+      <ows:Identifier>result</ows:Identifier>
+    </wps:RawDataOutput>
+  </wps:ResponseForm>
+</wps:Execute>

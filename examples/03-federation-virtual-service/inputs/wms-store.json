@@ -1,0 +1,1 @@
+{"wmsStore":{"capabilitiesURL":"<REMOTE_GEOSERVER_URL>/<REMOTE_WORKSPACE>/wms?service=WMS&request=GetCapabilities","enabled":true,"name":"remote_wms","type":"WMS"}}

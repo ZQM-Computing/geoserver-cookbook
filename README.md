@@ -15,7 +15,7 @@ A **GeoServer cookbook** for publishing, styling, federating, and securing OGC s
 
 ## Repository role and status
 
-**Status:** Active, public — first executable pattern implemented. The PostGIS publication example is tested for request-configuration contracts, but still requires validation against a real GeoServer/PostGIS deployment.
+**Status:** Active, public — pattern 01 implemented (contract-tested, needs live validation); patterns 02–07 written as design-only drafts (gate 1 target, runtime validation pending).
 
 **What this repository is:** GeoServer patterns — publishing PostGIS layers, SLD styling, workspace/datastore setup, OGC service configuration, and multi-node federation.
 
@@ -39,19 +39,25 @@ Geospatial developers and platform engineers who publish vector and raster data 
 | # | Example | Status | What it demonstrates |
 |---|---------|--------|----------------------|
 | 01 | [01-publish-postgis](examples/01-publish-postgis/README.md) | Implemented | Create or reuse a workspace and PostGIS datastore, then publish an existing table through the REST API without overwriting existing resources. |
-| 02 | `02-sld-styling` | Planned | SLD styles for points, lines, and polygons, with scale-dependent rules |
-| 03 | `03-federation-virtual-service` | Planned | Virtual-service federation across two nodes |
-| 04 | `04-federation-layer-group` | Planned | Layer-group federation |
-| 05 | `05-importer-extension` | Planned | GeoServer Importer workflows for bulk ingest |
-| 06 | `06-wps-extension` | Planned | WPS extension setup and a first process |
-| 07 | `07-security-basics` | Planned | Admin credential handling and service-level access rules |
+| 02 | [02-sld-styling](examples/02-sld-styling/README.md) | Written — design-only, gate 1 target | SLD styles for points, lines, and polygons, with scale-dependent rules |
+| 03 | [03-federation-virtual-service](examples/03-federation-virtual-service/README.md) | Written — design-only, gate 1 target | Virtual-service federation across two nodes |
+| 04 | [04-federation-layer-group](examples/04-federation-layer-group/README.md) | Written — design-only, gate 1 target | Layer-group federation |
+| 05 | [05-importer-extension](examples/05-importer-extension/README.md) | Written — design-only, gate 1 target | GeoServer Importer workflows for bulk ingest |
+| 06 | [06-wps-extension](examples/06-wps-extension/README.md) | Written — design-only, gate 1 target | WPS extension setup and a first process |
+| 07 | [07-security-basics](examples/07-security-basics/README.md) | Written — design-only, gate 1 target | Admin credential handling and service-level access rules |
 
 ## Repository layout
 
 ```text
 geoserver-cookbook/
 ├── examples/
-│   └── 01-publish-postgis/  # REST API publication pattern and runbook
+│   ├── 01-publish-postgis/  # REST API publication pattern and runbook
+│   ├── 02-sld-styling/
+│   ├── 03-federation-virtual-service/
+│   ├── 04-federation-layer-group/
+│   ├── 05-importer-extension/
+│   ├── 06-wps-extension/
+│   └── 07-security-basics/
 ├── tests/                   # request/XML contract tests
 ├── .github/workflows/       # test workflow
 ├── README.md

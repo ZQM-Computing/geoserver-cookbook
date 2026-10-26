@@ -1,0 +1,1 @@
+{"layerGroup":{"bounds":{"crs":"EPSG:4326","maxx":-79.97,"maxy":29.05,"minx":-80.05,"miny":28.98},"mode":"SINGLE","name":"federated_group","publishables":{"published":[{"@type":"layer","name":"federated:<REMOTE_LAYER>"}]},"styles":{"style":[{"name":""}]},"workspace":{"name":"federated"}}}
