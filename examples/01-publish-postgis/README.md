@@ -38,6 +38,6 @@ The script only issues GET and POST requests. It creates resources only when the
 
 ## Validation and limitations
 
-The automated tests validate XML escaping, connection-parameter serialization, explicit CRS configuration, and required-setting guards. They do **not** establish that a real GeoServer/PostGIS deployment accepts the configuration or that the published layer is correctly secured.
+The automated tests validate XML escaping, connection-parameter serialization, explicit CRS configuration, and required-setting guards. The disposable integration test also inspects GeoServer's native CRS and bounding box and compares the returned WFS geometry with the seeded feature. It does **not** establish that the published layer is correctly secured.
 
 After running, verify the layer's native CRS, extent, attributes, intended service endpoints, and access rules in your own environment. Avoid publishing sensitive tables. The publisher requires HTTPS for non-loopback GeoServer endpoints; plain HTTP is accepted only for localhost/loopback development and the disposable CI service. Keep REST credentials out of URLs, query strings, fragments, logs, and shell history. This client-side check does not configure server TLS or validate certificates beyond the Python HTTPS stack.
