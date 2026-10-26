@@ -55,11 +55,10 @@ def main() -> int:
         with conn.cursor() as cur:
             cur.execute("CREATE EXTENSION IF NOT EXISTS postgis")
             cur.execute(
-                "CREATE TABLE IF NOT EXISTS public.places "
+                "CREATE TABLE public.places "
                 "(id integer PRIMARY KEY, name text NOT NULL, "
                 "geom geometry(Point, 4326) NOT NULL)"
             )
-            cur.execute("TRUNCATE TABLE public.places")
             cur.execute(
                 "INSERT INTO public.places (id, name, geom) VALUES "
                 "(1, %s, ST_SetSRID(ST_MakePoint(-80.9, 29.0), 4326))",
