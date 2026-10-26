@@ -66,6 +66,31 @@ class ExampleInventoryTests(unittest.TestCase):
             if os.name == "posix":
                 self.assertEqual(output.stat().st_mode & 0o777, 0o600)
 
+    def test_security_password_payload_refuses_to_overwrite_existing_path(self):
+        import os
+        import subprocess
+        import tempfile
+
+        helper = EXAMPLES / "07-security-basics" / "inputs" / "build-user-payload.py"
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "payload.json"
+            output.write_text("existing content", encoding="utf-8")
+            env = os.environ.copy()
+            env["GEOSERVER_ADMIN_USER"] = "admin"
+            env["NEW_ADMIN_PASSWORD"] = "must-not-be-written"
+            result = subprocess.run(
+                ["python3", str(helper), str(output)],
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(output.read_text(encoding="utf-8"), "existing content")
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertNotIn("must-not-be-written", result.stderr)
+
+
     def test_security_script_uses_serialized_payload_not_interpolated_password(self):
         script = (EXAMPLES / "07-security-basics" / "apply-access-rules.sh").read_text(encoding="utf-8")
         self.assertIn('build-user-payload.py', script)
