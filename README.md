@@ -38,14 +38,13 @@ Geospatial developers and platform engineers who publish vector and raster data 
 
 | # | Example | Status | What it demonstrates |
 |---|---------|--------|----------------------|
-| 01 | [`01-publish-postgis`](examples/01-publish-postgis/README.md) | Implemented | Create or reuse a workspace and PostGIS datastore, then publish an existing table through the REST API; does not overwrite existing resources. |
+| 01 | [01-publish-postgis](examples/01-publish-postgis/README.md) | Implemented | Create or reuse a workspace and PostGIS datastore, then publish an existing table through the REST API without overwriting existing resources. |
 | 02 | `02-sld-styling` | Planned | SLD styles for points, lines, and polygons, with scale-dependent rules |
-| 02 | `02-sld-styling` | SLD styles for points, lines, and polygons, with scale-dependent rules |
-| 03 | `03-federation-virtual-service` | Virtual-service federation: one node serving another node’s layers (verified Node-1 ← Node-3) |
-| 04 | `04-federation-layer-group` | Layer-group federation path, byte-identical against the virtual-service path |
-| 05 | `05-importer-extension` | GeoServer Importer extension workflows for bulk ingest |
-| 06 | `06-wps-extension` | GeoServer WPS extension setup and a first process |
-| 07 | `07-security-basics` | Admin credential handling, service-level access rules, and what to leave locked down |
+| 03 | `03-federation-virtual-service` | Planned | Virtual-service federation across two nodes |
+| 04 | `04-federation-layer-group` | Planned | Layer-group federation |
+| 05 | `05-importer-extension` | Planned | GeoServer Importer workflows for bulk ingest |
+| 06 | `06-wps-extension` | Planned | WPS extension setup and a first process |
+| 07 | `07-security-basics` | Planned | Admin credential handling and service-level access rules |
 
 ## Repository layout
 
