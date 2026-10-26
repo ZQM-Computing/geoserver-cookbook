@@ -15,7 +15,7 @@ A **GeoServer cookbook** for publishing, styling, federating, and securing OGC s
 
 ## Repository role and status
 
-**Status:** Active, public — seeding. Pattern passes land in follow-up work from fleet-verified setups; the tables below list what is planned, not what is already written.
+**Status:** Active, public — first executable pattern implemented. The PostGIS publication example is tested for request-configuration contracts, but still requires validation against a real GeoServer/PostGIS deployment.
 
 **What this repository is:** GeoServer patterns — publishing PostGIS layers, SLD styling, workspace/datastore setup, OGC service configuration, and multi-node federation.
 
@@ -34,11 +34,12 @@ Geospatial developers and platform engineers who publish vector and raster data 
 - Java 21 runtime for GeoServer 3.x
 - Bash
 
-## Patterns (planned)
+## Patterns
 
-| # | Example | What it will demonstrate |
-|---|---------|--------------------------|
-| 01 | `01-publish-postgis` | Publishing a PostGIS table as WMS/WFS layers, workspace and datastore setup |
+| # | Example | Status | What it demonstrates |
+|---|---------|--------|----------------------|
+| 01 | [`01-publish-postgis`](examples/01-publish-postgis/README.md) | Implemented | Create or reuse a workspace and PostGIS datastore, then publish an existing table through the REST API; does not overwrite existing resources. |
+| 02 | `02-sld-styling` | Planned | SLD styles for points, lines, and polygons, with scale-dependent rules |
 | 02 | `02-sld-styling` | SLD styles for points, lines, and polygons, with scale-dependent rules |
 | 03 | `03-federation-virtual-service` | Virtual-service federation: one node serving another node’s layers (verified Node-1 ← Node-3) |
 | 04 | `04-federation-layer-group` | Layer-group federation path, byte-identical against the virtual-service path |
@@ -50,16 +51,24 @@ Geospatial developers and platform engineers who publish vector and raster data 
 
 ```text
 geoserver-cookbook/
-├── examples/          # pattern passes, landing in follow-up work
+├── examples/
+│   └── 01-publish-postgis/  # REST API publication pattern and runbook
+├── tests/                   # request/XML contract tests
+├── .github/workflows/       # test workflow
 ├── README.md
 └── LICENSE
 ```
 
+## Validation
+
+Run the local contract tests with `python -m unittest discover -s tests -v`. These tests cover XML escaping, PostGIS connection-parameter serialization, explicit native CRS configuration, and missing-setting rejection. They do not prove compatibility with a live GeoServer version, connectivity from GeoServer to PostGIS, or correct service authorization. The real deployment path must be tested in an isolated environment before production use.
+
 ## Roadmap
 
-- First pattern pass: publishing + styling (01, 02)
-- Second pass: federation (03, 04) with the fleet’s verified configurations
-- Security pass (07) once the fleet’s GeoServer admin handling is settled
+- Add a disposable GeoServer/PostGIS integration test pinned to supported versions
+- Add SLD styling (02) with schema validation and rendering evidence
+- Add federation patterns (03, 04) with explicit node/version assumptions
+- Add security checks (07) for least privilege and service-level access
 
 ## Contributing
 
