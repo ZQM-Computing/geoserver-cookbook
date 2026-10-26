@@ -6,6 +6,7 @@ existing workspaces, stores, or feature types.
 """
 from __future__ import annotations
 
+import ipaddress
 import os
 import sys
 import urllib.error
@@ -126,8 +127,23 @@ def load_config() -> dict[str, str]:
         if not config[key] or "/" in config[key]:
             raise ValueError(f"Invalid identifier in configuration: {key}")
     parsed = urllib.parse.urlparse(config["base_url"])
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+    if parsed.scheme not in ("http", "https") or not parsed.netloc or not parsed.hostname:
         raise ValueError("GEOSERVER_URL must be an absolute http:// or https:// URL")
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError("GEOSERVER_URL must not embed credentials; use GEOSERVER_USER and GEOSERVER_PASSWORD")
+    if parsed.query or parsed.fragment:
+        raise ValueError("GEOSERVER_URL must not include a query string or fragment")
+    if any(ord(char) < 32 or ord(char) == 127 for char in config["base_url"]):
+        raise ValueError("GEOSERVER_URL must not contain control characters")
+    if parsed.scheme == "http":
+        host = parsed.hostname.rstrip(".").lower()
+        is_loopback = host == "localhost"
+        try:
+            is_loopback = is_loopback or ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            pass
+        if not is_loopback:
+            raise ValueError("GEOSERVER_URL must use HTTPS for non-loopback hosts; HTTP is allowed only for local development")
     if not config["pg_port"].isdigit():
         raise ValueError("POSTGIS_PORT must be a numeric TCP port")
     return config
