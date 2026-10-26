@@ -39,6 +39,39 @@ class ExampleInventoryTests(unittest.TestCase):
                 self.assertNotIn("| head -c", text)
                 self.assertIn("mktemp -d", text)
 
+    def test_security_password_payload_escapes_credentials(self):
+        import json
+        import os
+        import subprocess
+        import tempfile
+
+        helper = EXAMPLES / "07-security-basics" / "inputs" / "build-user-payload.py"
+        password = 'quotes-" backslash-\\ unicode-ñ'
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "payload.json"
+            env = os.environ.copy()
+            env["GEOSERVER_ADMIN_USER"] = 'admin-"operator'
+            env["NEW_ADMIN_PASSWORD"] = password
+            subprocess.run(
+                ["python3", str(helper), str(output)],
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["user"]["userName"], 'admin-"operator')
+            self.assertEqual(payload["user"]["password"], password)
+            self.assertIs(payload["user"]["enabled"], True)
+            if os.name == "posix":
+                self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+
+    def test_security_script_uses_serialized_payload_not_interpolated_password(self):
+        script = (EXAMPLES / "07-security-basics" / "apply-access-rules.sh").read_text(encoding="utf-8")
+        self.assertIn('build-user-payload.py', script)
+        self.assertIn('--data-binary "@${TMP_DIR}/user-update.json"', script)
+        self.assertNotIn('password\\":\\"${NEW_ADMIN_PASSWORD}', script)
+
     def test_security_pattern_includes_audit_checks(self):
         security = EXAMPLES / "07-security-basics"
         self.assertTrue((security / "apply-access-rules.sh").is_file())
