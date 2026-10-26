@@ -26,14 +26,31 @@ def main() -> int:
             "enabled": True,
         }
     }
-    # The caller supplies a path inside a mktemp -d directory. Enforce
-    # restrictive permissions as defense in depth; never print the payload.
-    output.write_text(json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Create exclusively with restrictive permissions from the first byte.
+    # O_EXCL also refuses to follow a pre-existing file or symlink, avoiding
+    # accidental overwrite and a window where credentials could be readable.
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     try:
-        output.chmod(0o600)
+        descriptor = os.open(output, flags, 0o600)
+    except FileExistsError:
+        print("output path already exists; refusing to overwrite", file=sys.stderr)
+        return 1
     except OSError as exc:
-        print(f"cannot restrict payload permissions: {exc}", file=sys.stderr)
+        print(f"cannot create protected payload: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(payload, stream, ensure_ascii=False)
+            stream.write("\n")
+    except OSError as exc:
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
         output.unlink(missing_ok=True)
+        print(f"cannot write protected payload: {exc}", file=sys.stderr)
         return 1
     return 0
 
