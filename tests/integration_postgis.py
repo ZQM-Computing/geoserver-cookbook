@@ -146,6 +146,22 @@ def main() -> int:
         raise AssertionError(f"Expected Point geometry with coordinates, got {geometry}")
     if abs(float(coordinates[0]) - (-80.9)) > 1e-6 or abs(float(coordinates[1]) - 29.0) > 1e-6:
         raise AssertionError(f"Published geometry coordinates do not match the seeded fixture: {coordinates}")
+    # The public OWS endpoint is intentionally queryable above, but the
+    # administrative REST API must not disclose workspace inventory without
+    # credentials. This checks the boundary with a truly anonymous request.
+    anonymous_rest = urllib.request.Request(base_url + "/rest/workspaces.json")
+    try:
+        with urllib.request.urlopen(anonymous_rest, timeout=15) as response:
+            raise AssertionError(
+                "Anonymous request unexpectedly accessed GeoServer REST API "
+                f"(HTTP {response.status})"
+            )
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (401, 403):
+            raise AssertionError(
+                f"Expected anonymous REST access to be denied with HTTP 401/403, got {exc.code}"
+            ) from exc
+
     print(
         "GeoServer/PostGIS integration passed: workspace, datastore, layer, WFS feature, "
         "native CRS, and native extent verified."
