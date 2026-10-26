@@ -44,8 +44,11 @@ echo "== 2. Change admin password =="
 # GeoServer user update: PUT the user resource with the new password.
 # Field names follow the REST user resource; record any version-driven
 # difference at validation. The new password is never echoed.
+# Serialize credentials as JSON without interpolating user-controlled values
+# into JSON text or exposing the new password in curl's process arguments.
+python3 "${SCRIPT_DIR}/inputs/build-user-payload.py" "${TMP_DIR}/user-update.json"
 curl -sf -u "$AUTH" -X PUT -H 'Content-Type: application/json' \
-  -d "{\"user\":{\"userName\":\"${GEOSERVER_ADMIN_USER}\",\"password\":\"${NEW_ADMIN_PASSWORD}\",\"enabled\":true}}" \
+  --data-binary "@${TMP_DIR}/user-update.json" \
   "${BASE}/security/usergroup/users/${GEOSERVER_ADMIN_USER}" > /dev/null
 echo "OK password change accepted (new password NOT printed)"
 
