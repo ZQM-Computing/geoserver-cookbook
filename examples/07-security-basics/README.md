@@ -34,7 +34,7 @@ Three things, in order:
   restricted, and what network scope the server binds to
   (localhost or tailnet-only is the default recommendation here;
   anything wider is an explicit operator decision to record).
-- `curl`. Credentials only as placeholders:
+- `curl` and `python3` (standard library only). The Python helper safely JSON-encodes credentials and writes a mode-0600 temporary payload; credentials remain environment-only. Credentials only as placeholders:
   `<GEOSERVER_URL>`, `<ADMIN_USER>`, `<ADMIN_PASSWORD>`,
   `<NEW_ADMIN_PASSWORD>`. The new password is read from the
   environment at run time and is never echoed by the script.
