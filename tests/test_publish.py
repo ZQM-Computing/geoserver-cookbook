@@ -43,6 +43,58 @@ class PublishPatternTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "GEOSERVER_URL"):
                 publish.load_config()
 
+    def test_remote_http_geoserver_url_fails_closed(self):
+        with patch.dict(os.environ, {
+            "GEOSERVER_URL": "http://geoserver.example.test/geoserver",
+            "GEOSERVER_USER": "admin",
+            "GEOSERVER_PASSWORD": "secret",
+            "GEOSERVER_WORKSPACE": "ci",
+            "GEOSERVER_STORE": "postgis",
+            "POSTGIS_TABLE": "places",
+            "POSTGIS_HOST": "db.example.test",
+            "POSTGIS_DATABASE": "gis",
+            "POSTGIS_USER": "readonly",
+            "POSTGIS_PASSWORD": "secret",
+        }, clear=True):
+            with self.assertRaisesRegex(ValueError, "must use HTTPS"):
+                publish.load_config()
+
+    def test_local_http_geoserver_is_allowed_for_development(self):
+        with patch.dict(os.environ, {
+            "GEOSERVER_URL": "http://127.0.0.1:8080/geoserver",
+            "GEOSERVER_USER": "admin",
+            "GEOSERVER_PASSWORD": "secret",
+            "GEOSERVER_WORKSPACE": "ci",
+            "GEOSERVER_STORE": "postgis",
+            "POSTGIS_TABLE": "places",
+            "POSTGIS_HOST": "127.0.0.1",
+            "POSTGIS_DATABASE": "gis",
+            "POSTGIS_USER": "readonly",
+            "POSTGIS_PASSWORD": "secret",
+        }, clear=True):
+            self.assertEqual(publish.load_config()["base_url"], "http://127.0.0.1:8080/geoserver")
+
+    def test_url_credentials_and_query_are_rejected(self):
+        for url, message in (
+            ("https://admin:secret@geoserver.example.test/geoserver", "must not embed credentials"),
+            ("https://geoserver.example.test/geoserver?token=secret", "must not include a query string"),
+            ("https://geoserver.example.test/geoserver#fragment", "must not include a query string"),
+        ):
+            with self.subTest(url=url), patch.dict(os.environ, {
+                "GEOSERVER_URL": url,
+                "GEOSERVER_USER": "admin",
+                "GEOSERVER_PASSWORD": "secret",
+                "GEOSERVER_WORKSPACE": "ci",
+                "GEOSERVER_STORE": "postgis",
+                "POSTGIS_TABLE": "places",
+                "POSTGIS_HOST": "db.example.test",
+                "POSTGIS_DATABASE": "gis",
+                "POSTGIS_USER": "readonly",
+                "POSTGIS_PASSWORD": "secret",
+            }, clear=True):
+                with self.assertRaisesRegex(ValueError, message):
+                    publish.load_config()
+
 
 if __name__ == "__main__":
     unittest.main()
