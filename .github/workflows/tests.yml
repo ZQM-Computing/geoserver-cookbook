@@ -18,5 +18,48 @@ jobs:
           python-version: "3.11"
       - name: Compile example and tests
         run: python -m compileall -q examples tests
-      - name: Run tests
+      - name: Run contract tests
         run: python -m unittest discover -s tests -v
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_DB: geoserver
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d geoserver"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+      geoserver:
+        image: docker.osgeo.org/geoserver:2.28.6
+        env:
+          GEOSERVER_ADMIN_USER: admin
+          GEOSERVER_ADMIN_PASSWORD: geoserver
+        ports:
+          - 8080:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned integration dependency
+        run: python -m pip install "psycopg[binary]==3.2.9"
+      - name: Exercise publisher against disposable GeoServer and PostGIS
+        env:
+          GEOSERVER_URL: http://localhost:8080/geoserver
+          GEOSERVER_USER: admin
+          GEOSERVER_PASSWORD: geoserver
+          POSTGIS_HOST_FOR_TEST: localhost
+          POSTGIS_DATABASE: geoserver
+          POSTGIS_USER: postgres
+          POSTGIS_PASSWORD: postgres
+          POSTGIS_PORT: "5432"
+        run: python tests/integration_postgis.py
