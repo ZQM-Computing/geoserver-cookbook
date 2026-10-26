@@ -19,6 +19,8 @@ AUTH="${GEOSERVER_ADMIN_USER}:${GEOSERVER_ADMIN_PASSWORD}"
 WS="federated"
 STORE="remote_wms"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 echo "== 1. Workspace ${WS} (create if missing) =="
 if curl -sf -u "$AUTH" "${BASE}/workspaces/${WS}.json" > /dev/null; then
@@ -56,6 +58,12 @@ else
 fi
 
 echo "== 4. Verify via serving node only =="
-curl -sf -u "$AUTH" "${GEOSERVER_URL%/}/${WS}/wms?service=WMS&request=GetCapabilities" \
-  | grep -q "${REMOTE_LAYER}" && echo "OK serving node lists cascaded layer ${REMOTE_LAYER}"
+curl -sf -u "$AUTH" --output "$TMP_DIR/capabilities.xml" \
+  "${GEOSERVER_URL%/}/${WS}/wms?service=WMS&request=GetCapabilities"
+if grep -qF -- "$REMOTE_LAYER" "$TMP_DIR/capabilities.xml"; then
+  echo "OK serving node lists cascaded layer ${REMOTE_LAYER}"
+else
+  echo "FAIL: serving node capabilities do not list ${REMOTE_LAYER}" >&2
+  exit 1
+fi
 echo "DONE — now run: bash inputs/verify-federation.sh"
