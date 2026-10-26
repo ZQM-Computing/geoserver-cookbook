@@ -126,16 +126,16 @@ def main() -> int:
     native_bbox = feature_type.get("nativeBoundingBox")
     if not isinstance(native_bbox, dict):
         raise AssertionError("GeoServer feature type has no nativeBoundingBox")
-    expected_bounds = {"minx": -80.9, "maxx": -80.9, "miny": 29.0, "maxy": 29.0}
-    for key, expected in expected_bounds.items():
-        try:
-            actual = float(native_bbox[key])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise AssertionError(f"GeoServer nativeBoundingBox has invalid {key}: {native_bbox}") from exc
-        if abs(actual - expected) > 1e-6:
-            raise AssertionError(
-                f"GeoServer nativeBoundingBox {key}={actual}, expected {expected}"
-            )
+    try:
+        bounds = {key: float(native_bbox[key]) for key in ("minx", "maxx", "miny", "maxy")}
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AssertionError(f"GeoServer nativeBoundingBox has invalid coordinates: {native_bbox}") from exc
+    # GeoServer expands zero-area point extents by a small display margin. Require
+    # the known point to be contained and the resulting envelope to stay narrow.
+    if not (bounds["minx"] <= -80.9 <= bounds["maxx"] and bounds["miny"] <= 29.0 <= bounds["maxy"]):
+        raise AssertionError(f"GeoServer nativeBoundingBox does not contain the seeded point: {bounds}")
+    if bounds["maxx"] - bounds["minx"] > 0.01 or bounds["maxy"] - bounds["miny"] > 0.01:
+        raise AssertionError(f"GeoServer nativeBoundingBox is unexpectedly broad for one point: {bounds}")
     native_crs = str(native_bbox.get("crs", ""))
     if "4326" not in native_crs:
         raise AssertionError(f"Expected EPSG:4326 native extent, got CRS {native_crs!r}")
