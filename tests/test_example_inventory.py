@@ -27,6 +27,18 @@ class ExampleInventoryTests(unittest.TestCase):
                 entrypoints = list(directory.glob("*.sh")) + list(directory.glob("*.py"))
                 self.assertTrue(entrypoints, f"{name} has no shell or Python entrypoint")
 
+    def test_http_responses_are_not_truncated_through_curl_pipelines(self):
+        for relative in (
+            "examples/03-federation-virtual-service/configure-virtual-service.sh",
+            "examples/04-federation-layer-group/create-layer-group.sh",
+            "examples/07-security-basics/apply-access-rules.sh",
+        ):
+            with self.subTest(script=relative):
+                text = (ROOT / relative).read_text(encoding="utf-8")
+                self.assertNotIn("| grep -q", text)
+                self.assertNotIn("| head -c", text)
+                self.assertIn("mktemp -d", text)
+
     def test_security_pattern_includes_audit_checks(self):
         security = EXAMPLES / "07-security-basics"
         self.assertTrue((security / "apply-access-rules.sh").is_file())

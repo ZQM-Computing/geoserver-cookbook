@@ -17,6 +17,8 @@ AUTH="${GEOSERVER_ADMIN_USER}:${GEOSERVER_ADMIN_PASSWORD}"
 WS="federated"
 GROUP="federated_group"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 GROUP_JSON="$(sed -e "s|<REMOTE_LAYER>|${REMOTE_LAYER}|g" \
                    "${SCRIPT_DIR}/inputs/layer-group.json")"
@@ -30,6 +32,12 @@ else
   echo "OK layer group ${GROUP} created"
 fi
 
-curl -sf -u "$AUTH" "${GEOSERVER_URL%/}/${WS}/wms?service=WMS&request=GetCapabilities" \
-  | grep -q "${GROUP}" && echo "OK serving node lists layer group ${GROUP}"
+curl -sf -u "$AUTH" --output "$TMP_DIR/capabilities.xml" \
+  "${GEOSERVER_URL%/}/${WS}/wms?service=WMS&request=GetCapabilities"
+if grep -qF -- "$GROUP" "$TMP_DIR/capabilities.xml"; then
+  echo "OK serving node lists layer group ${GROUP}"
+else
+  echo "FAIL: serving node capabilities do not list ${GROUP}" >&2
+  exit 1
+fi
 echo "DONE — now run: bash inputs/compare-outputs.sh"

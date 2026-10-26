@@ -21,6 +21,8 @@ set -euo pipefail
 BASE="${GEOSERVER_URL%/}/rest"
 AUTH="${GEOSERVER_ADMIN_USER}:${GEOSERVER_ADMIN_PASSWORD}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 echo "== 1. Apply data access rules (before any password change) =="
 # The data access rules endpoint accepts a properties-style body.
@@ -34,7 +36,9 @@ curl -sf -u "$AUTH" -X PUT -H 'Content-Type: text/plain' \
   --data-binary "@${SCRIPT_DIR}/inputs/access-rules.properties" \
   "${BASE}/security/acl/layers" > /dev/null
 echo "OK data access rules applied"
-curl -sf -u "$AUTH" "${BASE}/security/acl/layers" | head -c 2000; echo
+curl -sf -u "$AUTH" --output "$TMP_DIR/layer-rules.txt" "${BASE}/security/acl/layers"
+head -c 2000 "$TMP_DIR/layer-rules.txt"
+echo
 
 echo "== 2. Change admin password =="
 # GeoServer user update: PUT the user resource with the new password.
