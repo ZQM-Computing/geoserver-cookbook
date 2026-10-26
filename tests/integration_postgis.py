@@ -107,7 +107,49 @@ def main() -> int:
     properties = features[0].get("properties", {})
     if properties.get("name") != "geoserver-ci-fixture":
         raise AssertionError("Published feature properties do not match the seeded fixture")
-    print("GeoServer/PostGIS integration passed: workspace, datastore, layer, and WFS feature verified.")
+    # Inspect the REST representation as well as the WFS payload: a feature
+    # being queryable does not prove GeoServer retained the intended CRS/extent.
+    feature_type_url = (
+        base_url
+        + "/rest/workspaces/ci/datastores/postgis_ci/featuretypes/places.json"
+    )
+    auth_token = base64.b64encode((username + ":" + password).encode()).decode()
+    feature_type_request = urllib.request.Request(
+        feature_type_url,
+        headers={"Authorization": "Basic " + auth_token, "Accept": "application/json"},
+    )
+    with urllib.request.urlopen(feature_type_request, timeout=30) as response:
+        if response.status != 200:
+            raise RuntimeError(f"GeoServer feature-type inspection returned HTTP {response.status}")
+        feature_type_payload = json.loads(response.read().decode("utf-8"))
+    feature_type = feature_type_payload.get("featureType", feature_type_payload)
+    native_bbox = feature_type.get("nativeBoundingBox")
+    if not isinstance(native_bbox, dict):
+        raise AssertionError("GeoServer feature type has no nativeBoundingBox")
+    expected_bounds = {"minx": -80.9, "maxx": -80.9, "miny": 29.0, "maxy": 29.0}
+    for key, expected in expected_bounds.items():
+        try:
+            actual = float(native_bbox[key])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise AssertionError(f"GeoServer nativeBoundingBox has invalid {key}: {native_bbox}") from exc
+        if abs(actual - expected) > 1e-6:
+            raise AssertionError(
+                f"GeoServer nativeBoundingBox {key}={actual}, expected {expected}"
+            )
+    native_crs = str(native_bbox.get("crs", ""))
+    if "4326" not in native_crs:
+        raise AssertionError(f"Expected EPSG:4326 native extent, got CRS {native_crs!r}")
+
+    geometry = features[0].get("geometry") or {}
+    coordinates = geometry.get("coordinates")
+    if geometry.get("type") != "Point" or not isinstance(coordinates, list) or len(coordinates) < 2:
+        raise AssertionError(f"Expected Point geometry with coordinates, got {geometry}")
+    if abs(float(coordinates[0]) - (-80.9)) > 1e-6 or abs(float(coordinates[1]) - 29.0) > 1e-6:
+        raise AssertionError(f"Published geometry coordinates do not match the seeded fixture: {coordinates}")
+    print(
+        "GeoServer/PostGIS integration passed: workspace, datastore, layer, WFS feature, "
+        "native CRS, and native extent verified."
+    )
     return 0
 
 
